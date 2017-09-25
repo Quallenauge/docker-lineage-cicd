@@ -156,6 +156,14 @@ RUN ln -sf /proc/1/fd/1 /var/log/docker.log
 
 RUN yes | pacman -Scc
 
+# Delay creation of user and group
+ARG THEUSER=buildbot
+ARG THEGROUP=builders
+
+ENV USER ${THEUSER}
+ENV GROUP ${THEGROUP}
+RUN groupadd -r "${GROUP}" && useradd -rmg "${GROUP}" "${USER}"
+
 # Set the entry point to init.sh
 ###########################################
 
