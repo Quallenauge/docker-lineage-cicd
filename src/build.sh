@@ -41,7 +41,7 @@ if ! [ -z "$DEVICE_LIST" ]; then
   if [ "$CLEAN_OUTDIR" = true ]; then
     echo ">> [$(date)] Cleaning '$ZIP_DIR'" >> $DOCKER_LOG
     cd $ZIP_DIR
-    rm *
+    rm -Rf *
     cd $SRC_DIR
   fi
 
