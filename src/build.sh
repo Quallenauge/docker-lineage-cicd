@@ -5,7 +5,7 @@
 ###########################################################
 
 DOCKER_LOG=/var/log/docker.log
-DEBUG_LOG=/dev/null
+DEBUG_LOG=/dev/stdout
 if [ "$DEBUG" = true ]; then
   DEBUG_LOG=$DOCKER_LOG
 fi
