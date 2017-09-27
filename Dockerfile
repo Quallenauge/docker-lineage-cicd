@@ -167,4 +167,4 @@ RUN groupadd -r "${GROUP}" && useradd -rmg "${GROUP}" "${USER}"
 # Set the entry point to init.sh
 ###########################################
 
-ENTRYPOINT /root/init.sh
+CMD /root/init.sh && /root/build.sh
