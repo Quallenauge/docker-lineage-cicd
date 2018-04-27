@@ -9,6 +9,15 @@ ENV CCACHE_DIR /srv/ccache
 ENV ZIP_DIR /srv/zips
 ENV LMANIFEST_DIR /srv/local_manifests
 
+# Delay creation of user and group
+ARG THEUSER=buildbot
+ARG THEGROUP=users
+
+ENV USER ${THEUSER}
+ENV GROUP ${THEGROUP}
+#RUN groupadd -g 100 -r "${GROUP}"
+RUN  useradd -u 1000 -rmg "${GROUP}" "${USER}"
+
 # Configurable environment variables
 ####################################
 
@@ -84,11 +93,27 @@ WORKDIR $SRC_DIR
 #################
 
 RUN chmod 0755 /root/*
+RUN chown -R "${USER}":"${GROUP}" /root/*
 
 # Enable multilib support
 #########################
 
 RUN sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+
+# Set mirrorlist
+#########################
+
+RUN cp /root/mirrorlist /etc/pacman.d/mirrorlist && rm /root/mirrorlist
+
+# Update installation
+##############################
+
+RUN pacman -Syu --noconfirm --noprogressbar
+
+# Reinstall keyring
+##############################
+
+RUN pacman -Sy --noconfirm --noprogressbar archlinux-keyring
 
 # Install development tools
 ##############################
@@ -106,7 +131,9 @@ RUN yes | pacman -Sy --noprogressbar --needed gcc-multilib
 RUN pacman -U --noconfirm --noprogressbar /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
     && rm /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
     && pacman -U --noconfirm --noprogressbar /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
-    && rm /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz
+    && rm /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
+    && pacman -U --noconfirm --noprogressbar /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
+    && rm /root/curl-7.55.1-2-x86_64.pkg.tar.xz
 
 # Install required Android AOSP packages
 ########################################
@@ -120,7 +147,6 @@ RUN pacman -Sy --needed --noconfirm --noprogressbar \
       sdl \
       wxgtk \
       squashfs-tools \
-      curl \
       ncurses \
       zlib \
       schedtool \
@@ -141,11 +167,14 @@ RUN pacman -Sy --needed --noconfirm --noprogressbar \
       cronie \
       ninja \
       wget \
+      zsh \
+      mc \
       jdk8-openjdk
 
 # Create missing symlink to python2
 ###################################
 RUN ln -s /usr/bin/python2 /usr/local/bin/python
+RUN ln -s /usr/bin/python2 /usr/bin/python
 
 # Allow redirection of stdout to docker logs
 ############################################
@@ -156,13 +185,9 @@ RUN ln -sf /proc/1/fd/1 /var/log/docker.log
 
 RUN yes | pacman -Scc
 
-# Delay creation of user and group
-ARG THEUSER=buildbot
-ARG THEGROUP=builders
+RUN echo "root:Docker!" | chpasswd
 
-ENV USER ${THEUSER}
-ENV GROUP ${THEGROUP}
-RUN groupadd -r "${GROUP}" && useradd -rmg "${GROUP}" "${USER}"
+USER "${USER}":"${GROUP}"
 
 # Set the entry point to init.sh
 ###########################################
