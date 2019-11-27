@@ -95,25 +95,32 @@ WORKDIR $SRC_DIR
 RUN chmod 0755 /root/*
 RUN chown -R "${USER}":"${GROUP}" /root/*
 
+
 # Enable multilib support
 #########################
 
 RUN sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+
+# Reinstall keyring
+##############################
+
+RUN pacman -Sy --noconfirm --noprogressbar archlinux-keyring
 
 # Set mirrorlist
 #########################
 
 RUN cp /root/mirrorlist /etc/pacman.d/mirrorlist && rm /root/mirrorlist
 
+# Add missing certificates
+#RUN pacman-key --recv-keys EEEEE2EEEE2EEEEE
+
+# Delete old/new sync data
+RUN rm /var/lib/pacman/sync/*
+
 # Update installation
 ##############################
 
 RUN pacman -Syu --noconfirm --noprogressbar
-
-# Reinstall keyring
-##############################
-
-RUN pacman -Sy --noconfirm --noprogressbar archlinux-keyring
 
 # Install development tools
 ##############################
@@ -124,6 +131,7 @@ RUN pacman -Sy --needed --noconfirm --noprogressbar base-devel
 ##############################
 
 RUN yes | pacman -Sy --noprogressbar --needed gcc-multilib
+RUN yes | pacman -Sy --noprogressbar --needed --noconfirm multilib-devel
 
 # Install manually compiled packages
 ####################################
@@ -133,7 +141,12 @@ RUN pacman -U --noconfirm --noprogressbar /root/ncurses5-compat-libs-6.0+2016122
     && pacman -U --noconfirm --noprogressbar /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
     && rm /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
     && pacman -U --noconfirm --noprogressbar /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
-    && rm /root/curl-7.55.1-2-x86_64.pkg.tar.xz
+    && rm /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
+    && pacman -U --noconfirm --noprogressbar /root/ccache-3.7.4-1-x86_64.pkg.tar.xz \
+    && rm /root/ccache-3.6-1-x86_64.pkg.tar.xz \
+    && pacman -U --noconfirm --noprogressbar /root/cdw-0.8.1-1-x86_64.pkg.tar.xz \
+    && rm /root/cdw-0.8.1-1-x86_64.pkg.tar.xz
+
 
 # Install required Android AOSP packages
 ########################################
@@ -169,16 +182,28 @@ RUN pacman -Sy --needed --noconfirm --noprogressbar \
       wget \
       zsh \
       mc \
-      jdk8-openjdk
+      python2 \
+      python3 \
+      ttf-dejavu \
+      jdk8-openjdk \
+      parallel
 
 # Create missing symlink to python2
 ###################################
+RUN rm -rf /usr/local/bin/python
 RUN ln -s /usr/bin/python2 /usr/local/bin/python
+RUN rm -rf /usr/bin/python
 RUN ln -s /usr/bin/python2 /usr/bin/python
 
 # Allow redirection of stdout to docker logs
 ############################################
 RUN ln -sf /proc/1/fd/1 /var/log/docker.log
+
+# add locale
+RUN echo "en_US.UTF-8 UTF-8" | tee -a /etc/locale.gen
+RUN echo "en_US ISO-8859-1"  | tee -a /etc/locale.gen
+# debian specific RUN echo "C.UTF-8"           | tee -a /etc/locale.gen
+RUN locale-gen
 
 # Cleanup
 #########
