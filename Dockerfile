@@ -104,18 +104,24 @@ RUN sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 # Reinstall keyring
 ##############################
 
-RUN pacman -Sy --noconfirm --noprogressbar archlinux-keyring
 
 # Set mirrorlist
 #########################
 
 RUN cp /root/mirrorlist /etc/pacman.d/mirrorlist && rm /root/mirrorlist
 
+RUN yes | pacman -Suy --noconfirm --noprogressbar
+
+RUN pacman -Sy --noconfirm --noprogressbar archlinux-keyring
+
+RUN pacman -Sy --noconfirm --noprogressbar aria2 icu nettle
+# RUN cp /root/pacman.conf.pacnew /etc/pacman.conf && rm /root/pacman.conf.pacnew
+
 # Add missing certificates
-#RUN pacman-key --recv-keys EEEEE2EEEE2EEEEE
+##RUN pacman-key --recv-keys EEEEE2EEEE2EEEEE
 
 # Delete old/new sync data
-RUN rm /var/lib/pacman/sync/*
+RUN rm -rf /var/lib/pacman/sync/*
 
 # Update installation
 ##############################
@@ -136,16 +142,26 @@ RUN yes | pacman -Sy --noprogressbar --needed --noconfirm multilib-devel
 # Install manually compiled packages
 ####################################
 
+#RUN pacman -U --noconfirm --noprogressbar /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
+#    && rm /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
+#    && pacman -U --noconfirm --noprogressbar /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
+#    && rm /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
+#    && pacman -U --noconfirm --noprogressbar /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
+#    && rm /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
+#    && pacman -U --noconfirm --noprogressbar /root/ccache-3.7.4-1-x86_64.pkg.tar.xz \
+#    && rm /root/ccache-3.6-1-x86_64.pkg.tar.xz \
+#    && pacman -U --noconfirm --noprogressbar /root/cdw-0.8.1-1-x86_64.pkg.tar.xz \
+#    && rm /root/cdw-0.8.1-1-x86_64.pkg.tar.xz
+
 RUN pacman -U --noconfirm --noprogressbar /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
     && rm /root/ncurses5-compat-libs-6.0+20161224-1-x86_64.pkg.tar.xz \
-    && pacman -U --noconfirm --noprogressbar /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
-    && rm /root/lib32-ncurses5-compat-libs-6.0-4-x86_64.pkg.tar.xz \
     && pacman -U --noconfirm --noprogressbar /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
     && rm /root/curl-7.55.1-2-x86_64.pkg.tar.xz \
     && pacman -U --noconfirm --noprogressbar /root/ccache-3.7.4-1-x86_64.pkg.tar.xz \
     && rm /root/ccache-3.6-1-x86_64.pkg.tar.xz \
     && pacman -U --noconfirm --noprogressbar /root/cdw-0.8.1-1-x86_64.pkg.tar.xz \
     && rm /root/cdw-0.8.1-1-x86_64.pkg.tar.xz
+
 
 
 # Install required Android AOSP packages
@@ -186,7 +202,8 @@ RUN pacman -Sy --needed --noconfirm --noprogressbar \
       python3 \
       ttf-dejavu \
       jdk8-openjdk \
-      parallel
+      parallel \
+      curl
 
 # Create missing symlink to python2
 ###################################
